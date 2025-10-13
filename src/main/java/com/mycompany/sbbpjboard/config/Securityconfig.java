@@ -25,19 +25,18 @@ public class Securityconfig {
 		http
 		.csrf(csrt -> csrt.disable()) // csrf 인증을 비활성화 (프론트엔드 + 백엔드 구조이기에 불필요)
 		.cors(Customizer.withDefaults()) // CORS를 활성화
-		.authorizeHttpRequests(authorize 
-				-> authorize.requestMatchers("/api/auth/signup", "/api/auth/login", "/api/board", "/api/board/**").permitAll()
+		.authorizeHttpRequests(auth 
+				-> auth.requestMatchers("/api/auth/signup", "/api/auth/login", "/api/board", "/api/board/**").permitAll()
 				.anyRequest().authenticated())
 		.formLogin(login -> login // 타임리프, JSP는 form에서 넘어오지만, 리액트(REST api 요청으로 오게 되면 login으로 작성해줘야 함) 
-				.loginPage("/api/auth/login") // 로그인 요청 url
+				.loginProcessingUrl("/api/auth/login") // 로그인 요청 url
 				.usernameParameter("username") // 아이디 input name="username"일 때
 		        .passwordParameter("password") // password input name="password"일 때
 		        .successHandler((req, res, auth) -> res.setStatus(HttpServletResponse.SC_OK)) // 로그인 성공 시 200 (status값)
-		        .failureHandler((req, res, ex) -> res.setStatus(HttpServletResponse.SC_UNAUTHORIZED)) // 실패 시 401 값이 간다
-		        ) 
+		        .failureHandler((req, res, ex) -> res.setStatus(HttpServletResponse.SC_UNAUTHORIZED))) 
 		.logout(logout -> logout
 				.logoutUrl("/api/auth/logout")
-				.logoutSuccessHandler((req, res, ex) -> res.setStatus(HttpServletResponse.SC_OK)) // 로그아웃 성공 시 200 응답
+				.logoutSuccessHandler((req, res, auth) -> res.setStatus(HttpServletResponse.SC_OK))
 				);
 		return http.build();
 	}
@@ -59,5 +58,6 @@ public class Securityconfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+	
 
 }
