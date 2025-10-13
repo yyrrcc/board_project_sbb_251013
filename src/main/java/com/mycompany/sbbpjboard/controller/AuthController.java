@@ -39,7 +39,7 @@ public class AuthController { // 인증 전용 컨트롤러
 	}
 
 	// 로그인
-	@GetMapping("/me") // 현재 로그인한(=나 자신) 사용자 정보를 가져오기
+	@GetMapping("/me") // 현재 로그인한(=나 자신) 사용자 정보를 가져오기 (Principal, Session 같은 느낌)
 	public ResponseEntity<?> me(Authentication auth) {
 		return ResponseEntity.ok(Map.of("username", auth.getName()));
 		}
