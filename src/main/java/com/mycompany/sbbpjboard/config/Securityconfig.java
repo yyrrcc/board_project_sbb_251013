@@ -32,6 +32,7 @@ public class Securityconfig {
 				.loginProcessingUrl("/api/auth/login") // 로그인 요청 url
 				.usernameParameter("username") // 아이디 input name="username"일 때
 		        .passwordParameter("password") // password input name="password"일 때
+		        // 값들이 SecurityService 클래스로 넘어와서 db에 있는지 없는지 확인
 		        .successHandler((req, res, auth) -> res.setStatus(HttpServletResponse.SC_OK)) // 로그인 성공 시 200 (status값)
 		        .failureHandler((req, res, ex) -> res.setStatus(HttpServletResponse.SC_UNAUTHORIZED))) 
 		.logout(logout -> logout

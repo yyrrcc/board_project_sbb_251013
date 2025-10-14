@@ -20,7 +20,7 @@ public class MemberSecurityService implements UserDetailsService{
 	// 유저에게 받은 username과 (암호화된) password를 조회해서 권한을 준다!
 	// build()에서 UserDetails 객체 생성 반환해줌
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		Member member = memberRepository.findByUsername(username).orElseThrow(
+		Member member = memberRepository.findByUsername(username).orElseThrow( // Optional 반환인데 orElseThrow 사용해서 바로 엔티티로 받게 됨
 				() -> new UsernameNotFoundException("사용자 없음"));
 		return org.springframework.security.core.userdetails.User
 				.withUsername(member.getUsername())
