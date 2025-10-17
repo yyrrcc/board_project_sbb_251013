@@ -1,14 +1,18 @@
 package com.mycompany.sbbpjboard.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,4 +37,9 @@ public class Board {
 
 	@ManyToOne // 게시판글:게시판글쓴이 = n:1
 	private Member author;
+	
+	// 게시판글:댓글 = 1:n
+	// 댓글이 있는 게시글 지울 때 cascade 해줘야 함!
+	@OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Comment> comments = new ArrayList<>();
 }

@@ -25,8 +25,9 @@ public class Securityconfig {
 		http
 		.csrf(csrt -> csrt.disable()) // csrf 인증을 비활성화 (프론트엔드 + 백엔드 구조이기에 불필요)
 		.cors(Customizer.withDefaults()) // CORS를 활성화
-		.authorizeHttpRequests(auth 
-				-> auth.requestMatchers("/api/auth/signup", "/api/auth/login", "/api/board", "/api/board/**").permitAll()
+		.authorizeHttpRequests(auth
+				// **댓글 권한
+				-> auth.requestMatchers("/api/auth/signup", "/api/auth/login", "/api/board", "/api/board/**", "/api/comments", "/api/comments/**").permitAll()
 				.anyRequest().authenticated())
 		.formLogin(login -> login // 타임리프, JSP는 form에서 넘어오지만, 리액트(REST api 요청으로 오게 되면 login으로 작성해줘야 함) 
 				.loginProcessingUrl("/api/auth/login") // 로그인 요청 url
