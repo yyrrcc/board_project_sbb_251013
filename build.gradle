@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.6'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'com.github.node-gradle.node' version '7.1.0' // 1. React 빌드용 플러그인 추가
 }
 
 group = 'com.mycompany'
@@ -40,4 +41,41 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+// 2. React frontend build setting
+// 2-1. Node.js 빌드 설정
+node {
+   version = '22.19.0' // Node.js 버전 (로컬 버전에 맞게)
+   download = true
+   workDir = file("${project.buildDir}/nodejs")
+   npmWorkDir = file("${project.buildDir}/npm")
+}
+
+// 2-2. 현재 react 소스가 저장되어 있는 폴더를 변수로 선언해서 build.gradle 내에서 사용
+def frontendDir = "$projectDir/src/main/frontend"
+
+// 2-3. npm install 실행 작업 정의
+tasks.register("npmCustomInstall", com.github.gradle.node.npm.task.NpmTask) {
+   workingDir = file(frontendDir)
+   args = ["install"]
+}
+
+// 2-4. npm run build 실행 작업 정의 (npm run bulid 명령을 실행해서 React 빌드 결과물 build 폴더로 생성)
+tasks.register("npmBuild", com.github.gradle.node.npm.task.NpmTask) {
+   dependsOn("npmCustomInstall")
+   workingDir = file(frontendDir)
+   args = ["run", "build"]
+}
+
+// 2-5. React 빌드 결과를 Spring Boot로 복사
+tasks.register("copyFrontend", Copy) {
+   dependsOn("npmBuild")
+   from("$frontendDir/build")
+   into("$projectDir/src/main/resources/static")
+}
+
+// 2-6. Spring boot 빌드 시 React 빌드도 함께 빌드 되도록 자동 실행
+tasks.named("processResources") {
+   dependsOn("copyFrontend")
 }
