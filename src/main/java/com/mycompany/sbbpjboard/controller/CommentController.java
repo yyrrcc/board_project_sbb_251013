@@ -42,17 +42,16 @@ public class CommentController {
 	@Autowired
 	private BoardRepository boardRepository;
 	
-	//댓글 작성->
+	// 댓글 작성 (게시글의 id 필요)
 	@PostMapping("/{boardId}")
 	public ResponseEntity<?> writeComment(
-			@PathVariable("boardId") Long boardId,
-			@Valid @RequestBody CommentDto commentDto,
+			@PathVariable("boardId") Long boardId, 
+			@Valid @RequestBody CommentDto commentDto, 
 			BindingResult bindingResult, 
-			Authentication auth
-			) {
+			Authentication auth) {
 		
-		//Spring Validation 결과 처리
-		if(bindingResult.hasErrors()) { //참이면 유효성 체크 실패->error 발생
+		// Spring Validation 결과 처리
+		if(bindingResult.hasErrors()) {
 			Map<String, String> errors = new HashMap<>();
 			bindingResult.getFieldErrors().forEach(
 				err -> {
@@ -62,81 +61,72 @@ public class CommentController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
 		}
 		
-		//원 게시글의 존재 여부 확인
-		Optional<Board> _board = boardRepository.findById(boardId);
-		if (_board.isEmpty()) { //참이면 해당 원 게시글 존재 x
-			
+		// boardId로 받은 게시글의 존재 여부 확인
+		Optional<Board> optional = boardRepository.findById(boardId);
+		if (optional.isEmpty()) {
 			Map<String, String> error = new HashMap<>();
 			error.put("boardError", "해당 게시글이 존재하지 않습니다.");
-			
-			return ResponseEntity.status(404).body(error);
+			return ResponseEntity.status(404).body(error); // 404 Not Found
 		}
 		
-		//로그인한 유저의 SiteUser 객체 가져오기
+		// 로그인한 유저의 Member 객체 가져오기 + comment entity 선언 후 값 넣어주기
 		Member member = memberRepository.findByUsername(auth.getName()).orElseThrow();
-		
 		Comment comment = new Comment();
-		comment.setBoard(_board.get());
+		comment.setBoard(optional.get());
 		comment.setAuthor(member);
 		comment.setContent(commentDto.getContent());
-		
-		commentRepository.save(comment); //작성된 comment 엔티티를 db에 삽입		
-		
-		return ResponseEntity.ok(comment); //db에 등록된 댓글 객체 200 응답과 반환
+		commentRepository.save(comment); // 작성된 comment 엔티티를 db에 삽입		
+		return ResponseEntity.ok(comment); // 200 응답과 엔티티 반환
 	}
 	
-	//댓글 조회->댓글이 달린 원 게시글의 id가 필요->게시글 id로 댓글 조회
+	
+	// 댓글 가져오기 (댓글이 달린 게시글의 id 필요)
 	@GetMapping("/{boardId}")
 	public ResponseEntity<?> getComments(@PathVariable("boardId") Long boardId) {
-		
-		//원 게시글의 존재 여부 확인
-		Optional<Board> _board = boardRepository.findById(boardId);
-		if (_board.isEmpty()) { //참이면 해당 원 게시글 존재 x
+		// 원 게시글의 존재 여부 확인
+		Optional<Board> optional = boardRepository.findById(boardId);
+		if (optional.isEmpty()) {
 			return ResponseEntity.badRequest().body("해당 게시글이 존재하지 않습니다.");
 		}
 		
-		List<Comment> comments  = commentRepository.findByBoard(_board.get());
-		
+		List<Comment> comments  = commentRepository.findByBoard(optional.get());		
 		return ResponseEntity.ok(comments);
 	}
 	
-	//댓글 수정
+	// 댓글 수정 (댓글의 기본키 필요)
 	@PutMapping("/{commentId}")
 	public ResponseEntity<?> updateComment(
 			@PathVariable("commentId") Long commentId,
 			@RequestBody CommentDto commentDto,
 			Authentication auth) {
 		
-		//수정할 댓글 찾아오기
+		// 수정할 댓글 찾아오기
 		Comment comment = commentRepository.findById(commentId).orElseThrow();
-		
-		if (!comment.getAuthor().getUsername().equals(auth.getName())) { //참이면 수정 권한 X
+		// 권한 확인 (로그인한 유저 = 댓글 쓴 유저)
+		if (!comment.getAuthor().getUsername().equals(auth.getName())) {
 			return ResponseEntity.status(403).body("수정 권한이 없습니다.");
 		}
-		
+		// 수정한 댓글 기존 댓글 엔티티에 setter 이용해서 넣어주기
 		comment.setContent(commentDto.getContent());
-		commentRepository.save(comment); //수정 완료
-		
-		return ResponseEntity.ok(comment); //수정 완료 후 수정된 댓글 객체 반환
+		commentRepository.save(comment);
+		return ResponseEntity.ok(comment); // 수정 완료 후 수정된 댓글 객체 반환
 	}
 	
-	//댓글 삭제
+	// 댓글 삭제
 	@DeleteMapping("/{commentId}")
 	public ResponseEntity<?> deleteComment(
 			@PathVariable("commentId") Long commentId,
 			Authentication auth) {
-		
-		Optional<Comment> _comment = commentRepository.findById(commentId);
-		if (_comment.isEmpty()) {
-			return ResponseEntity.status(404).body("삭제할 댓글이 존재하지 않습니다.");
+		// 댓글 존재 여부 확인 및 변수로 선언
+		Optional<Comment> optional = commentRepository.findById(commentId);
+		if (optional.isEmpty()) {
+			return ResponseEntity.status(404).body("삭제할 댓글이 존재하지 않습니다."); // 404 Not Found
 		}
-		
-		if (!_comment.get().getAuthor().getUsername().equals(auth.getName()) ) { //참->삭제권한 x
-			return ResponseEntity.status(403).body("삭제 권한이 없습니다.");
+		// 권한 확인
+		if (!optional.get().getAuthor().getUsername().equals(auth.getName()) ) {
+			return ResponseEntity.status(403).body("삭제 권한이 없습니다."); // 403 Forbidden 권한 없음
 		}
-		
-		commentRepository.delete(_comment.get());
-			
+		commentRepository.delete(optional.get());
 		return ResponseEntity.ok("댓글 삭제 성공!");
 	}
 	

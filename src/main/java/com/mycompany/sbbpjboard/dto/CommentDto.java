@@ -15,5 +15,5 @@ public class CommentDto {
 	
 	@NotBlank(message = "댓글 내용을 입력해 주세요.")
 	@Size(min = 5, message = "댓글 내용은 최소 5글자 이상이어야 합니다")
-	private String content; //댓글 내용
+	private String content;
 }

@@ -28,21 +28,21 @@ public class Comment {
 	private Long id;
 	
 	@Column(nullable = false, length = 500)
-	private String content; //댓글 내용
+	private String content; // 댓글 내용
 	
-	@CreationTimestamp //자동으로 insert 시 현재 날짜시간 삽입
-	private LocalDateTime createdAt; //댓글 입력 날짜시간
+	@CreationTimestamp
+	private LocalDateTime createdAt; // 댓글 입력 날짜 시간
 	
-	//로그인한 사용자의 이름->댓글 쓴 사용자
-	@ManyToOne(fetch = FetchType.LAZY) //->불필요한 join방지->성능 상향->ManyToOne에서 항상 명시
-	@JoinColumn(name = "author_id") //join되는 테이블의 외래키 이름 설정
-	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+	// 댓글 : 사용자 = n : 1
+	@ManyToOne(fetch = FetchType.LAZY) // @ManyToOne에서 항상 명시(지연 로딩, 필요할 때만 데이터 가져오게 해주는 것)
+	@JoinColumn(name = "author_id") // join되는 테이블의 외래키 이름 설정(명시 해주는 게 좋긴 함)
+	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // JPA가 내부적으로 붙이는 프록시용 필드를 JSON에서 무시(직렬회 에러 방지)
 	private Member author;
 	
-	//댓글이 달릴 원 게시글의 id
+	// 댓글 : 게시판 = n : 1
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "board_id") //join되는 테이블의 외래키 이름 설정
-	@JsonIgnore
+	@JoinColumn(name = "board_id") // join되는 테이블의 외래키 이름 설정
+	@JsonIgnore // 그 필드를 JSON 응답에서 아예 빼버림(Comment 쪽의 board를 숨겨 순환을 끊음)
 	private Board board;
 
 }

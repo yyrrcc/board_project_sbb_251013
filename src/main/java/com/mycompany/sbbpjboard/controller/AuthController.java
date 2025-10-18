@@ -33,20 +33,20 @@ public class AuthController { // 인증 전용 컨트롤러
 	// 회원가입 (동일 username 있는지 확인 -> 비밀번호 암호화 -> 가입 성공)
 	// 리액트로 응답을 보내주기 위해서 ResponseEntity 사용 badRequest().body(), ok()
 	// ResponseEntity<?> 통해서 타입을 지정 안 해줄수도 있음 / 다양하게 만들 수 있음! (boolean 이용)
-	// ** 유효성 추가!
+	// 유효성 추가 @Valid + dto
 	@PostMapping("/signup")
 	public ResponseEntity<?> signup(@Valid @RequestBody MemberDto memberDto, BindingResult result) {
-		// ** Spring Validation 결과 처리
-		if(result.hasErrors()) { //참이면 유효성 체크 실패->err
-			Map<String, String> errors = new HashMap<>();
-			result.getFieldErrors().forEach(
+		// Spring Validation 결과 처리
+		if(result.hasErrors()) {
+			Map<String, String> errors = new HashMap<>(); // 에러를 Map에 담아주기
+			result.getFieldErrors().forEach( // getFieldErrors 모든 에러 불러와서 forEach로 하나씩 풀기
 				err -> {
 					errors.put(err.getField(), err.getDefaultMessage());
 				}
 			);
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
 		}
-		// ** Entity 객체 선언 후 사용자가 입력한 값을 entity 객체에 setter 이용해서 저장
+		// Entity 객체 선언 후 사용자가 입력한 값을 entity 객체에 setter 이용해서 저장
 		Member member = new Member();
 		member.setUsername(memberDto.getUsername());
 		member.setPassword(memberDto.getPassword());

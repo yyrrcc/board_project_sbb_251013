@@ -1,7 +1,6 @@
 package com.mycompany.sbbpjboard.controller;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,42 +47,40 @@ public class BoardController {
 //		return boardRepository.findAll();
 //	}
 	
-	// *** 전체 게시글 조회 + 페이징 처리
+	// 전체 게시글 조회 + 페이징 처리
 	@GetMapping
-	public ResponseEntity<?> pagingList(@RequestParam(name = "page", defaultValue = "0") int page,
-						@RequestParam(name ="size", defaultValue = "10") int size) {
-		//page->사용자가 요청한 페이지의 번호, size->한 페이지당 보여질 글의 갯수
-		
+	// @RequestParam 으로 ?page=0&size=10 같은 값 받아오기. page 기본값은 1이 아닌 0
+	// page : 유저가 요청한 페이지 번호, size : 한 페이지 당 보여질 글의 개수
+	public ResponseEntity<?> pagingList(@RequestParam(name = "page", defaultValue = "0") int page, 
+			@RequestParam(name ="size", defaultValue = "10") int size) {
+		// page가 음수인 경우 0으로 초기화 (유효성 검증st)
 		if (page < 0) {
 			page = 0;
 		}
-		
+		// size가 음수거나 0이면 기본값인 10으로 초기화 (유효성 검증st)
 		if (size <= 0) {
 			size = 10;
 		}
 		
-		//Pageable 객체 생성->findAll에서 사용
-		Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-		Page<Board> boardPage = boardRepository.findAll(pageable); //DB에서 페이징된 게시글만 조회
-		//boardPage가 포함하는 정보->
-		//1. 해당 페이지 글 리스트->boardPage.getContent()
-		//2. 현재 페이지 번호->boardPage.getNumber()
-		//3. 전체 페이지 수->boardPage.getTotalPages()
-		//4. 전체 게시글 수-> boardPage.getTotalElements()
+		// Pageable 객체 생성. Pageable pageable = PageRequest.of(pagenumber, pagesize, sort)
+		Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending()); // id로 내림차순 정렬
+		Page<Board> boardPage = boardRepository.findAll(pageable); // DB에서 페이징된 게시글만 조회(반환타입 Page<>)
+		// boardPage가 포함하는 정보
+		// 1. 해당 페이지 글 리스트 boardPage.getContent()
+		// 2. 현재 페이지 번호 boardPage.getNumber()
+		// 3. 전체 페이지 수 boardPage.getTotalPages()
+		// 4. 전체 게시글 수 boardPage.getTotalElements()
 		
-		Map<String, Object> pagingResponse = new HashMap<>();
+		Map<String, Object> pagingResponse = new HashMap<>(); // 응답을 Map 형식으로 받아서 보내주기 위함(반환타입 Map<String, Object>)
 		pagingResponse.put("posts", boardPage.getContent()); //페이징된 현재 페이지에 해당하는 게시글 리스트 10개
 		pagingResponse.put("currentPage", boardPage.getNumber()); //현재 페이지 번호
 		pagingResponse.put("totalPages", boardPage.getTotalPages()); //모든 페이지의 수
 		pagingResponse.put("totalItems", boardPage.getTotalElements()); //게시판에 올라와 있는 모든 글 수(Long)
-		//{"currentPage":3, totalPages:57}
-		//System.out.println("총 글의 갯수:" + boardPage.getTotalElements());
 		
-		return ResponseEntity.ok(pagingResponse);
+		return ResponseEntity.ok(pagingResponse); // // JSON 형식으로 이런 식으로 반환된다 {"currentPage":3, "totalPages":57, "posts":[]}
 	}
 	
-	// 글 작성(Create-post)
-	// ** 유효성 검사 추가
+	// 글 작성(Create-post) + 유효성 검사 추가
 	@PostMapping
 	public ResponseEntity<?> createBoard(@Valid @RequestBody BoardDto boardDto, BindingResult result, Authentication auth) {
 		// ** 사용자의 로그인 여부 확인
@@ -91,7 +88,7 @@ public class BoardController {
 			return ResponseEntity.status(401).body("로그인 후 글쓰기 가능합니다.");
 		}
 		// ** Spring Validation 결과 처리
-		if(result.hasErrors()) { //참이면 유효성 체크 실패->error 발생
+		if(result.hasErrors()) {
 			Map<String, String> errors = new HashMap<>();
 			result.getFieldErrors().forEach(
 				err -> {
