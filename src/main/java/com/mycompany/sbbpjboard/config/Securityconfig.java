@@ -85,7 +85,11 @@ public class Securityconfig {
 	@Bean
     CorsConfigurationSource corsConfigurationSource() { // 프론트엔드 리액트에서 요청하는 주소 허용
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000")); // React 개발 서버
+        config.setAllowedOrigins(List.of("http://localhost:3000", // React 개발 서버
+        		"http://localhost:8888",
+        		"http://172.30.1.99:3000", // 배포 시 아이피 주소 넣어주기
+        		"http://172.30.1.99:8888",
+        		"http://172.0.0.1:3000")); 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true); // 쿠키, 세션 허용 시 필요
